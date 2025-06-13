@@ -1,4 +1,4 @@
-package com.sqickle.spacenotes.model
+package com.sqickle.spacenotes.data.model
 
 import android.graphics.Color
 import org.json.JSONObject

@@ -1,7 +1,8 @@
-package com.sqickle.spacenotes.model
+package com.sqickle.spacenotes.data.model
 
 import android.graphics.Color
 import org.json.JSONObject
+import java.util.Date
 import java.util.UUID
 
 data class Note(
@@ -9,7 +10,9 @@ data class Note(
     val title: String,
     val content: String,
     val color: Int = Color.WHITE,
-    val importance: Importance = Importance.NORMAL
+    val importance: Importance = Importance.NORMAL,
+    val selfDestructDate: Date? = null,
+    val createdAt: Date = Date()
 ){
     companion object {
         fun parse(json: JSONObject): Note? {
