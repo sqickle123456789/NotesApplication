@@ -1,5 +1,6 @@
 package com.sqickle.spacenotes.ui.noteslist
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,11 +24,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sqickle.spacenotes.data.model.Importance
 import com.sqickle.spacenotes.data.model.Note
+import com.sqickle.spacenotes.ui.theme.errorContainerDark
+import com.sqickle.spacenotes.ui.theme.errorDark
+import com.sqickle.spacenotes.ui.theme.onSurfaceDark
+import com.sqickle.spacenotes.ui.theme.onSurfaceVariantDark
+import com.sqickle.spacenotes.ui.theme.primaryContainerDark
+import com.sqickle.spacenotes.ui.theme.primaryDark
+import com.sqickle.spacenotes.ui.theme.secondaryContainerDark
+import com.sqickle.spacenotes.ui.theme.secondaryDark
+import com.sqickle.spacenotes.ui.theme.surfaceContainerHighDark
+import com.sqickle.spacenotes.ui.theme.tertiaryDark
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -42,66 +52,77 @@ fun NotesListItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = 16.dp,
-                vertical = 8.dp
-            )
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = Color(note.color).copy(alpha = 0.1f)
+            containerColor = surfaceContainerHighDark.copy(alpha = 0.8f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = primaryDark.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = note.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = onSurfaceDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete note",
+                            tint = errorDark
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    text = note.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
+                    text = note.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = onSurfaceVariantDark,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(24.dp)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete note",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
+                    ImportanceBadge(importance = note.importance)
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = note.content,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ImportanceBadge(importance = note.importance)
-
-                note.selfDestructDate?.let { date ->
-                    Text(
-                        text = "Destruct: ${date.formatShort()}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    note.selfDestructDate?.let { date ->
+                        Text(
+                            text = "Destruct: ${date.formatShort()}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = tertiaryDark
+                        )
+                    }
                 }
             }
         }
@@ -110,21 +131,25 @@ fun NotesListItem(
 
 @Composable
 private fun ImportanceBadge(importance: Importance) {
-    val (text, color) = when (importance) {
-        Importance.HIGH -> "!! HIGH !!" to Color.Red
-        Importance.LOW -> "low" to Color.Gray
-        Importance.NORMAL -> "normal" to MaterialTheme.colorScheme.primary
+    val (text, color, bgColor) = when (importance) {
+        Importance.HIGH -> Triple("!! HIGH !!", errorDark, errorContainerDark)
+        Importance.LOW -> Triple("low", secondaryDark, secondaryContainerDark)
+        Importance.NORMAL -> Triple("normal", primaryDark, primaryContainerDark)
     }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
+            .background(
+                color = bgColor.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(8.dp)
+            )
             .border(
                 width = 1.dp,
-                color = color,
-                shape = RoundedCornerShape(4.dp)
+                color = color.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(8.dp)
             )
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
             text = text.uppercase(),
@@ -133,7 +158,6 @@ private fun ImportanceBadge(importance: Importance) {
         )
     }
 }
-
 private fun Date.formatShort(): String {
     return SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(this)
 }
