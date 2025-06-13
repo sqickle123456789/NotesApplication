@@ -30,7 +30,6 @@ import com.sqickle.spacenotes.data.model.Importance
 import com.sqickle.spacenotes.data.model.Note
 import com.sqickle.spacenotes.ui.theme.errorContainerDark
 import com.sqickle.spacenotes.ui.theme.errorDark
-import com.sqickle.spacenotes.ui.theme.onSurfaceDark
 import com.sqickle.spacenotes.ui.theme.onSurfaceVariantDark
 import com.sqickle.spacenotes.ui.theme.primaryContainerDark
 import com.sqickle.spacenotes.ui.theme.primaryDark
@@ -80,7 +79,7 @@ fun NotesListItem(
                     Text(
                         text = note.title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = onSurfaceDark,
+                        color = tertiaryDark,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

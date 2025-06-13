@@ -15,13 +15,13 @@ val secondaryContainerDark = Color(0xFF413466)  // Purple nebula
 val onSecondaryContainerDark = Color(0xFFE6DDFF)  // Soft cosmic glow
 
 // Star-like golden accents for tertiary
-val tertiaryDark = Color(0xFFFFD170)  // Golden star
+val tertiaryDark = Color(0xFFFFC74F)  // Golden star
 val onTertiaryDark = Color(0xFF3D2A00)  // Dark cosmic dust
 val tertiaryContainerDark = Color(0xFF5A4100)  // Amber nebula
 val onTertiaryContainerDark = Color(0xFFFFE5A8)  // Starlight glow
 
 // Error colors with cosmic red
-val errorDark = Color(0xFFFF9D90)  // Red giant star
+val errorDark = Color(0xFFFA7D87)  // Red giant star
 val onErrorDark = Color(0xFF5E0013)  // Dark cosmic blood
 val errorContainerDark = Color(0xFF8C0021)  // Supernova red
 val onErrorContainerDark = Color(0xFFFFDAD5)  // Soft cosmic warning

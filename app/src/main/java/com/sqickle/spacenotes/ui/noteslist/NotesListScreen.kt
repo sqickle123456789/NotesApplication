@@ -17,16 +17,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
@@ -37,7 +41,7 @@ import com.sqickle.spacenotes.data.model.Note
 fun NotesListScreen(
     onNoteClick: (String) -> Unit,
     onCreateNote: () -> Unit,
-    viewModel: NotesListViewModel = hiltViewModel()
+    viewModel: NotesListViewModel = hiltViewModel(),
 ) {
     val notes: List<Note> by viewModel.notes.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -54,12 +58,10 @@ fun NotesListScreen(
 
         Scaffold(
             floatingActionButton = {
-                FloatingActionButton(onClick = onCreateNote) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Note"
-                    )
-                }
+                SunFloatingActionButton(
+                    onClick = onCreateNote,
+                    isRotating = true
+                )
             },
             containerColor = Color.Transparent
         ) { padding ->
@@ -127,4 +129,49 @@ private fun Star(modifier: Modifier = Modifier) {
                 shape = CircleShape
             )
     )
+}
+
+
+@Composable
+fun SunFloatingActionButton(
+    onClick: () -> Unit,
+    isRotating: Boolean = true,
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(20000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+        modifier = Modifier
+            .background(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.tertiary,
+                        MaterialTheme.colorScheme.tertiary
+                    ),
+                    radius = 100f
+                ),
+                shape = CircleShape
+            )
+            .size(64.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.WbSunny,
+            contentDescription = "Sun",
+            modifier = Modifier
+                .rotate(if (isRotating) rotation else 0f)
+                .size(32.dp),
+            tint = Color.White
+        )
+    }
 }
