@@ -24,6 +24,7 @@ class CreateNoteViewModel @Inject constructor(
             importance = Importance.NORMAL
         )
     )
+    val note = _note
 
     fun updateTitle(title: String) {
         _note.value = _note.value.copy(title = title)

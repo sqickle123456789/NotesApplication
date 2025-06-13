@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -86,7 +87,9 @@ private fun ImportanceOption(
             else MaterialTheme.colorScheme.outline
         ),
         onClick = onSelected,
-        modifier = modifier.padding(end = 4.dp)
+        modifier = modifier
+            .width(70.dp)
+            .padding(end = 4.dp)
     ) {
         Text(
             text = text,
