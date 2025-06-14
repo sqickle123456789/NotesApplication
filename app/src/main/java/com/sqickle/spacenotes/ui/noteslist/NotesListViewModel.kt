@@ -34,7 +34,7 @@ class NotesListViewModel @Inject constructor(
 
     fun deleteNote(noteId: String) {
         viewModelScope.launch {
-            repository.deleteNote(noteId)
+            repository.deleteNoteFromCache(noteId)
             loadNotes()
         }
     }

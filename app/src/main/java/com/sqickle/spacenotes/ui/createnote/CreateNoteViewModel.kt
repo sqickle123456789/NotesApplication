@@ -48,7 +48,7 @@ class CreateNoteViewModel @Inject constructor(
 
     fun saveNote(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            repository.saveNote(_note.value)
+            repository.saveNoteToCache(_note.value)
             onSuccess()
         }
     }

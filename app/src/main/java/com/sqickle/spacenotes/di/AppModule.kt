@@ -2,7 +2,9 @@ package com.sqickle.spacenotes.di
 
 import android.content.Context
 import com.sqickle.spacenotes.data.repository.NotesRepository
-import com.sqickle.spacenotes.data.source.FileNoteDataSource
+import com.sqickle.spacenotes.data.repository.NotesRepositoryImpl
+import com.sqickle.spacenotes.data.source.local.LocalNoteDataSource
+import com.sqickle.spacenotes.data.source.remote.RemoteNoteDataSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +17,22 @@ import javax.inject.Singleton
 object DataModule {
     @Provides
     @Singleton
-    fun provideNotesRepository(@ApplicationContext context: Context): NotesRepository {
-        return FileNoteDataSource(context)
+    fun provideLocalDataSource(@ApplicationContext context: Context): LocalNoteDataSource {
+        return LocalNoteDataSource(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemoteDataSource(): RemoteNoteDataSource {
+        return RemoteNoteDataSource()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotesRepository(
+        localDataSource: LocalNoteDataSource,
+        remoteDataSource: RemoteNoteDataSource
+    ): NotesRepository {
+        return NotesRepositoryImpl(localDataSource, remoteDataSource)
     }
 }

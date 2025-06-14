@@ -9,6 +9,7 @@ import com.sqickle.spacenotes.data.repository.NotesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -33,7 +34,7 @@ class EditNoteViewModel @Inject constructor(
     private fun loadNote() {
         viewModelScope.launch {
             _isLoading.value = true
-            _note.value = repository.getNoteById(noteId)
+            _note.value = repository.getNoteByIdStream(noteId).first()
             _isLoading.value = false
         }
     }
@@ -60,7 +61,7 @@ class EditNoteViewModel @Inject constructor(
 
     fun saveNote() {
         viewModelScope.launch {
-            _note.value?.let { repository.saveNote(it) }
+            _note.value?.let { repository.saveNoteToCache(it) }
         }
     }
 }
