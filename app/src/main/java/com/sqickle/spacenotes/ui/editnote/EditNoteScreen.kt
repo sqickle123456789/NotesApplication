@@ -41,6 +41,7 @@ fun EditNoteScreen(
     } else {
         NoteEditContent(
             note = note!!,
+            topBarTitle = "Редактировать заметку",
             onTitleChange = viewModel::updateTitle,
             onContentChange = viewModel::updateContent,
             onColorChange = viewModel::updateColor,

@@ -14,6 +14,7 @@ fun CreateNoteScreen(
 
     NoteEditContent(
         note = noteState,
+        topBarTitle = "Создать заметку",
         onTitleChange = viewModel::updateTitle,
         onContentChange = viewModel::updateContent,
         onColorChange = viewModel::updateColor,

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -15,6 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sqickle.spacenotes.data.model.Importance
+
+private data class ImportanceOptionColors(
+    val text: String,
+    val containerColor: androidx.compose.ui.graphics.Color,
+    val contentColor: androidx.compose.ui.graphics.Color
+)
 
 @Composable
 fun ImportanceSelectionSection(
@@ -51,36 +57,36 @@ private fun ImportanceOption(
     onSelected: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val (text, containerColor, contentColor) = when (importance) {
-        Importance.HIGH -> Triple(
-            "High",
-            if (isSelected) MaterialTheme.colorScheme.errorContainer
+    val colors = when (importance) {
+        Importance.HIGH -> ImportanceOptionColors(
+            text = "High",
+            containerColor = if (isSelected) MaterialTheme.colorScheme.errorContainer
             else MaterialTheme.colorScheme.surfaceVariant,
-            if (isSelected) MaterialTheme.colorScheme.onErrorContainer
+            contentColor = if (isSelected) MaterialTheme.colorScheme.onErrorContainer
             else MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Importance.NORMAL -> Triple(
-            "Normal",
-            if (isSelected) MaterialTheme.colorScheme.primaryContainer
+        Importance.NORMAL -> ImportanceOptionColors(
+            text = "Normal",
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceVariant,
-            if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
             else MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Importance.LOW -> Triple(
-            "Low",
-            if (isSelected) MaterialTheme.colorScheme.tertiaryContainer
+        Importance.LOW -> ImportanceOptionColors(
+            text = "Low",
+            containerColor = if (isSelected) MaterialTheme.colorScheme.tertiaryContainer
             else MaterialTheme.colorScheme.surfaceVariant,
-            if (isSelected) MaterialTheme.colorScheme.onTertiaryContainer
+            contentColor = if (isSelected) MaterialTheme.colorScheme.onTertiaryContainer
             else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
     Surface(
         shape = MaterialTheme.shapes.small,
-        color = containerColor,
-        contentColor = contentColor,
+        color = colors.containerColor,
+        contentColor = colors.contentColor,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
             color = if (isSelected) MaterialTheme.colorScheme.primary
@@ -88,14 +94,17 @@ private fun ImportanceOption(
         ),
         onClick = onSelected,
         modifier = modifier
-            .width(70.dp)
+            .wrapContentSize()
             .padding(end = 4.dp)
     ) {
         Text(
-            text = text,
+            text = colors.text,
             style = MaterialTheme.typography.labelMedium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier.padding(
+                vertical = 8.dp,
+                horizontal = 32.dp
+            )
         )
     }
 }

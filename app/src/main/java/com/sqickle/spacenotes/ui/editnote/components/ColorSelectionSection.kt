@@ -5,19 +5,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,8 +35,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color as ComposeColor
 
-
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ColorSelectionSection(
     currentColor: Int,
@@ -54,7 +52,7 @@ fun ColorSelectionSection(
     )
 
     var showCustomColorPicker by remember { mutableStateOf(false) }
-    var customColor by remember { mutableIntStateOf(currentColor) }
+    val customColor = remember { mutableIntStateOf(currentColor) }
 
     Column(modifier = modifier) {
         Text(
@@ -63,29 +61,34 @@ fun ColorSelectionSection(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
         ) {
-            defaultColors.forEach { (color, name) ->
-                ColorOption(
-                    color = color,
-                    name = name,
-                    isSelected = color == currentColor,
-                    onSelected = { onColorSelected(color) }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                defaultColors.forEach { (color, name) ->
+                    ColorOption(
+                        color = color,
+                        name = name,
+                        isSelected = color == currentColor,
+                        onSelected = { onColorSelected(color) }
+                    )
+                }
+
+                CustomColorOption(
+                    currentColor = currentColor,
+                    defaultColors = defaultColors.map { it.first },
+                    onColorSelected = { color ->
+                        customColor.intValue = color
+                        onColorSelected(color)
+                    },
+                    onLongPress = { showCustomColorPicker = true }
                 )
             }
-
-            CustomColorOption(
-                currentColor = currentColor,
-                defaultColors = defaultColors.map { it.first },
-                onColorSelected = { color ->
-                    customColor = color
-                    onColorSelected(color)
-                },
-                onLongPress = { showCustomColorPicker = true }
-            )
         }
 
         if (currentColor !in defaultColors.map { it.first }) {
@@ -105,10 +108,11 @@ fun ColorSelectionSection(
 
     if (showCustomColorPicker) {
         ColorPickerDialog(
-            initialColor = customColor,
+            initialColor = customColor.intValue,
             onColorSelected = {
-                customColor = it
+                customColor.intValue = it
                 onColorSelected(it)
+                showCustomColorPicker = false
             },
             onDismiss = { showCustomColorPicker = false }
         )
@@ -121,17 +125,19 @@ private fun ColorOption(
     name: String,
     isSelected: Boolean,
     onSelected: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(60.dp)
+        modifier = modifier.width(60.dp)
     ) {
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .border(
                     width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outline,
                     shape = RoundedCornerShape(4.dp)
                 )
                 .clickable(onClick = onSelected)
@@ -143,7 +149,8 @@ private fun ColorOption(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Selected",
-                    tint = if (color == Color.WHITE) ComposeColor.Black else ComposeColor.White,
+                    tint = if (color == Color.WHITE) ComposeColor.Black
+                    else ComposeColor.White,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -163,30 +170,45 @@ private fun CustomColorOption(
     defaultColors: List<Int>,
     onColorSelected: (Int) -> Unit,
     onLongPress: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val isSelected = currentColor !in defaultColors
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(60.dp)
+        modifier = modifier.width(60.dp)
     ) {
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .border(
                     width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outline,
                     shape = RoundedCornerShape(4.dp)
                 )
-                .clickable { onColorSelected(Color.LTGRAY) }
+                .clickable {
+                    if (isSelected) {
+                        onColorSelected(currentColor)
+                    } else {
+                        onColorSelected(Color.LTGRAY)
+                    }
+                }
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onLongPress = { onLongPress() },
+                        onLongPress = { onLongPress() }
                     )
                 }
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(ComposeColor.Red, ComposeColor.Green, ComposeColor.Blue)
+                        colors = listOf(
+                            ComposeColor.Red,
+                            ComposeColor.Yellow,
+                            ComposeColor.Green,
+                            ComposeColor.Cyan,
+                            ComposeColor.Blue,
+                            ComposeColor.Magenta
+                        )
                     ),
                     shape = RoundedCornerShape(4.dp)
                 )
@@ -197,13 +219,6 @@ private fun CustomColorOption(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Selected",
-                    tint = ComposeColor.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Palette,
-                    contentDescription = "Custom color",
                     tint = ComposeColor.White,
                     modifier = Modifier.size(20.dp)
                 )

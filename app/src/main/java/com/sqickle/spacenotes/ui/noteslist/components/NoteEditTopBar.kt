@@ -14,12 +14,13 @@ import androidx.compose.ui.Modifier
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditTopBar(
+    topBarTitle: String,
     onSave: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = { Text("Edit Note") },
+        title = { Text(text = topBarTitle) },
         navigationIcon = {
             IconButton(onClick = onCancel) {
                 Icon(

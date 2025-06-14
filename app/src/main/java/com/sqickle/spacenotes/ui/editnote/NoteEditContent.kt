@@ -33,6 +33,7 @@ import java.util.Date
 @Composable
 fun NoteEditContent(
     note: Note,
+    topBarTitle: String,
     onTitleChange: (String) -> Unit,
     onContentChange: (String) -> Unit,
     onColorChange: (Int) -> Unit,
@@ -45,7 +46,11 @@ fun NoteEditContent(
 
     Scaffold(
         topBar = {
-            NoteEditTopBar(onSave = onSave, onCancel = onCancel)
+            NoteEditTopBar(
+                topBarTitle = topBarTitle,
+                onSave = onSave,
+                onCancel = onCancel
+            )
         }
     ) { padding ->
         Column(
@@ -63,7 +68,8 @@ fun NoteEditContent(
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -79,7 +85,7 @@ fun NoteEditContent(
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
                 )
             }
 
