@@ -1,13 +1,17 @@
 package com.sqickle.spacenotes.ui.editnote.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +20,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sqickle.spacenotes.data.model.Importance
 
-private data class ImportanceOptionColors(
+data class ImportanceOptionColors(
     val text: String,
     val containerColor: androidx.compose.ui.graphics.Color,
-    val contentColor: androidx.compose.ui.graphics.Color
+    val contentColor: androidx.compose.ui.graphics.Color,
 )
 
 @Composable
@@ -35,16 +39,22 @@ fun ImportanceSelectionSection(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
         ) {
-            Importance.entries.forEach { importance ->
-                ImportanceOption(
-                    importance = importance,
-                    isSelected = currentImportance == importance,
-                    onSelected = { onImportanceSelected(importance) }
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Importance.entries.forEach { importance ->
+                    ImportanceOption(
+                        importance = importance,
+                        isSelected = currentImportance == importance,
+                        onSelected = { onImportanceSelected(importance) }
+                    )
+                }
             }
         }
     }
@@ -59,27 +69,27 @@ private fun ImportanceOption(
 ) {
     val colors = when (importance) {
         Importance.HIGH -> ImportanceOptionColors(
-            text = "High",
-            containerColor = if (isSelected) MaterialTheme.colorScheme.errorContainer
-            else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (isSelected) MaterialTheme.colorScheme.onErrorContainer
-            else MaterialTheme.colorScheme.onSurfaceVariant
+            text = Importance.HIGH.getEmojiName(),
+            containerColor = if (isSelected) colorScheme.errorContainer
+            else colorScheme.surfaceVariant,
+            contentColor = if (isSelected) colorScheme.onErrorContainer
+            else colorScheme.onSurfaceVariant
         )
 
         Importance.NORMAL -> ImportanceOptionColors(
-            text = "Normal",
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-            else MaterialTheme.colorScheme.onSurfaceVariant
+            text = Importance.NORMAL.getEmojiName(),
+            containerColor = if (isSelected) colorScheme.primaryContainer
+            else colorScheme.surfaceVariant,
+            contentColor = if (isSelected) colorScheme.onPrimaryContainer
+            else colorScheme.onSurfaceVariant
         )
 
         Importance.LOW -> ImportanceOptionColors(
-            text = "Low",
-            containerColor = if (isSelected) MaterialTheme.colorScheme.tertiaryContainer
-            else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (isSelected) MaterialTheme.colorScheme.onTertiaryContainer
-            else MaterialTheme.colorScheme.onSurfaceVariant
+            text = Importance.LOW.getEmojiName(),
+            containerColor = if (isSelected) colorScheme.tertiaryContainer
+            else colorScheme.surfaceVariant,
+            contentColor = if (isSelected) colorScheme.onTertiaryContainer
+            else colorScheme.onSurfaceVariant
         )
     }
 
@@ -89,13 +99,13 @@ private fun ImportanceOption(
         contentColor = colors.contentColor,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.outline
+            color = if (isSelected) colorScheme.primary
+            else colorScheme.outline
         ),
         onClick = onSelected,
         modifier = modifier
             .wrapContentSize()
-            .padding(end = 4.dp)
+            .padding(horizontal = 8.dp)
     ) {
         Text(
             text = colors.text,
@@ -103,7 +113,7 @@ private fun ImportanceOption(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(
                 vertical = 8.dp,
-                horizontal = 32.dp
+                horizontal = 16.dp
             )
         )
     }

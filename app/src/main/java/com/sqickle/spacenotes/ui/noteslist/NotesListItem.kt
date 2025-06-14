@@ -20,21 +20,19 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sqickle.spacenotes.data.model.Importance
 import com.sqickle.spacenotes.data.model.Note
-import com.sqickle.spacenotes.ui.theme.errorContainerDark
 import com.sqickle.spacenotes.ui.theme.errorDark
 import com.sqickle.spacenotes.ui.theme.onSurfaceVariantDark
-import com.sqickle.spacenotes.ui.theme.primaryContainerDark
 import com.sqickle.spacenotes.ui.theme.primaryDark
-import com.sqickle.spacenotes.ui.theme.secondaryContainerDark
-import com.sqickle.spacenotes.ui.theme.secondaryDark
 import com.sqickle.spacenotes.ui.theme.surfaceContainerHighDark
 import com.sqickle.spacenotes.ui.theme.tertiaryDark
 import java.text.SimpleDateFormat
@@ -113,7 +111,10 @@ fun NotesListItem(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ImportanceBadge(importance = note.importance)
+                    ImportanceBadge(
+                        importance = note.importance,
+                        noteColor = note.color
+                    )
 
                     note.selfDestructDate?.let { date ->
                         Text(
@@ -129,34 +130,33 @@ fun NotesListItem(
 }
 
 @Composable
-private fun ImportanceBadge(importance: Importance) {
-    val (text, color, bgColor) = when (importance) {
-        Importance.HIGH -> Triple("!! HIGH !!", errorDark, errorContainerDark)
-        Importance.LOW -> Triple("low", secondaryDark, secondaryContainerDark)
-        Importance.NORMAL -> Triple("normal", primaryDark, primaryContainerDark)
-    }
-
+private fun ImportanceBadge(importance: Importance, noteColor: Int) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .background(
-                color = bgColor.copy(alpha = 0.4f),
+                color = Color(noteColor).copy(alpha = 0.3f),
                 shape = RoundedCornerShape(8.dp)
             )
             .border(
                 width = 1.dp,
-                color = color.copy(alpha = 0.5f),
+                color = Color(noteColor).copy(alpha = 0.5f),
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
-            text = text.uppercase(),
+            text = importance.getEmojiName(),
             style = MaterialTheme.typography.labelSmall,
-            color = color
+            color = when (importance) {
+                Importance.HIGH -> colorScheme.onErrorContainer
+                Importance.LOW -> colorScheme.onTertiaryContainer
+                Importance.NORMAL -> colorScheme.onPrimaryContainer
+            }
         )
     }
 }
+
 private fun Date.formatShort(): String {
     return SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(this)
 }
