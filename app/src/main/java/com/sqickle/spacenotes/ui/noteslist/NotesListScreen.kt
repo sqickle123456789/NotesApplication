@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sqickle.spacenotes.data.model.Note
+import com.sqickle.spacenotes.ui.noteslist.components.SwipeWrapper
 
 @Composable
 fun NotesListScreen(
@@ -75,10 +76,16 @@ fun NotesListScreen(
             } else {
                 LazyColumn(modifier = Modifier.padding(padding)) {
                     items(notes) { note ->
-                        NotesListItem(
-                            note = note,
-                            onClick = { onNoteClick(note.uid) },
-                            onDelete = { viewModel.deleteNote(note.uid) }
+
+                        SwipeWrapper(
+                            onSwipeDelete = { viewModel.deleteNote(note.uid) },
+                            content = {
+                                NotesListItem(
+                                    note = note,
+                                    onClick = { onNoteClick(note.uid) },
+                                    onDelete = { viewModel.deleteNote(note.uid) }
+                                )
+                            }
                         )
                     }
                 }
