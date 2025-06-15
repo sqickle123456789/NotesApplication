@@ -114,7 +114,6 @@ class RemoteNoteDataSource @Inject constructor(
                 lastException = e
                 if (shouldRetry(e, isModifyingOperation)) {
                     if (e is IllegalStateException && e.message == "Data is out of sync") {
-                        // Обновляем данные перед повторной попыткой
                         fetchNotes()
                     }
                     delay(RETRY_DELAY_MS * (attempt + 1))
@@ -131,7 +130,7 @@ class RemoteNoteDataSource @Inject constructor(
         return when (e) {
             is HttpException -> e.code() in 500..599 || e.code() == 401
             is SocketTimeoutException -> true
-            is IllegalStateException -> true // Для случаев несинхронизированных данных
+            is IllegalStateException -> true
             else -> false
         }
     }

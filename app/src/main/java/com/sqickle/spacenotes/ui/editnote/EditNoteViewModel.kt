@@ -88,8 +88,6 @@ class EditNoteViewModel @Inject constructor(
                 }.onFailure { error ->
                     _uiEvents.emit(UiEvent.Error("Failed to sync changes: ${error.message}"))
                 }
-
-                repository.syncWithBackend()
             } catch (e: Exception) {
                 _uiEvents.emit(UiEvent.Error("Failed to save changes: ${e.message}"))
             } finally {
@@ -102,14 +100,12 @@ class EditNoteViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                repository.deleteNoteFromCache(noteId)
                 repository.deleteNoteFromBackend(noteId).onSuccess {
                     _uiEvents.emit(UiEvent.NoteDeleted)
+                    repository.deleteNoteFromCache(noteId)
                 }.onFailure { error ->
                     _uiEvents.emit(UiEvent.Error("Failed to delete note: ${error.message}"))
                 }
-
-                repository.syncWithBackend()
             } catch (e: Exception) {
                 _uiEvents.emit(UiEvent.Error("Failed to delete note: ${e.message}"))
             } finally {

@@ -6,8 +6,7 @@ import java.util.Date
 
 @Entity(tableName = "notes")
 data class NoteEntity(
-    @PrimaryKey
-    val uid: String,
+    @PrimaryKey val uid: String,
     val title: String,
     val content: String,
     val color: Int,

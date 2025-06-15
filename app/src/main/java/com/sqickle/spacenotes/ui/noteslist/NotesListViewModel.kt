@@ -43,17 +43,12 @@ class NotesListViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 repository.getAllNotes(false)
-                syncWithServer()
             } catch (e: Exception) {
                 _uiEvents.emit(UiEvent.Error("Failed to load notes: ${e.message}"))
             } finally {
                 _isLoading.value = false
             }
         }
-    }
-
-    private suspend fun syncWithServer() {
-        repository.syncWithBackend()
     }
 
     fun refreshNotes() {
@@ -73,18 +68,16 @@ class NotesListViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                repository.deleteNoteFromCache(noteId)
                 repository.deleteNoteFromBackend(noteId).fold(
                     onSuccess = {
                         _uiEvents.emit(UiEvent.NoteDeleted)
+                        repository.deleteNoteFromCache(noteId)
                     },
                     onFailure = { error ->
-                        syncWithServer()
                         _uiEvents.emit(UiEvent.Error("Delete failed: ${error.message}"))
                     }
                 )
             } catch (e: Exception) {
-                syncWithServer()
                 _uiEvents.emit(UiEvent.Error("Failed to delete note: ${e.message}"))
             } finally {
                 _isLoading.value = false

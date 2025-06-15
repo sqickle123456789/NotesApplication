@@ -15,7 +15,10 @@ class RoomNoteDataSource @Inject constructor(
 
     override fun getAllNotesStream(): Flow<List<Note>> =
         noteDao.getAllNotesStream()
-            .map { entities -> entities.map { it.toNote() } }
+            .map { entities ->
+                entities.map { it.toNote() }
+                    .sortedByDescending { it.createdAt }
+            }
 
     override fun getNoteByIdStream(id: String): Flow<Note?> =
         noteDao.getNoteByIdStream(id)
