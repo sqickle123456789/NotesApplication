@@ -68,7 +68,6 @@ fun AppNavigation(
         composable<CreateNote> {
             CreateNoteScreen(
                 onBack = { navController.popBackStack() },
-                onSaveSuccess = { navController.popBackStack() }
             )
         }
     }

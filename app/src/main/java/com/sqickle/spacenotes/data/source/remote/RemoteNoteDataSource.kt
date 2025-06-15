@@ -26,12 +26,15 @@ class RemoteNoteDataSource @Inject constructor(
     private companion object {
         const val MAX_RETRIES = 3
         const val RETRY_DELAY_MS = 1000L
-        const val INITIAL_REVISION = 0
         const val OAUTH_CLIENT_ID = "0d0970774e284fa8ba9ff70b6b06479a"
     }
 
-    private var lastKnownRevision: Int = INITIAL_REVISION
+    private var lastKnownRevision: Int = 0
     private val isRefreshingToken = AtomicBoolean(false)
+
+    suspend fun init() {
+        fetchNotes()
+    }
 
     suspend fun fetchNotes(): List<Note> {
         return executeWithRetry {
@@ -43,59 +46,120 @@ class RemoteNoteDataSource @Inject constructor(
 
     suspend fun pushNote(note: Note): Note {
         return executeWithRetry(isModifyingOperation = true) {
-            val response = api.addNote(
-                revision = lastKnownRevision,
-                request = ElementRequest(note.toDto())
-            ).also { checkResponse(it) }
+            try {
+                val response = api.addNote(
+                    revision = lastKnownRevision,
+                    request = ElementRequest(note.toDto())
+                ).also { checkResponse(it) }
 
-            lastKnownRevision = response.body()?.revision ?: lastKnownRevision
-            response.body()!!.element.toNote()
+                lastKnownRevision = response.body()?.revision ?: lastKnownRevision
+                response.body()!!.element.toNote()
+            } catch (e: IllegalStateException) {
+                if (e.message == "Data is out of sync") {
+                    fetchNotes()
+                    val retryResponse = api.addNote(
+                        revision = lastKnownRevision,
+                        request = ElementRequest(note.toDto())
+                    ).also { checkResponse(it) }
+
+                    lastKnownRevision = retryResponse.body()?.revision ?: lastKnownRevision
+                    retryResponse.body()!!.element.toNote()
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
     suspend fun updateNote(note: Note): Note {
         return executeWithRetry(isModifyingOperation = true) {
-            val response = api.updateNote(
-                revision = lastKnownRevision,
-                noteUid = note.uid,
-                request = ElementRequest(note.toDto())
-            ).also { checkResponse(it) }
+            try {
+                val response = api.updateNote(
+                    revision = lastKnownRevision,
+                    noteUid = note.uid,
+                    request = ElementRequest(note.toDto())
+                ).also { checkResponse(it) }
 
-            lastKnownRevision = response.body()?.revision ?: lastKnownRevision
-            response.body()!!.element.toNote()
+                lastKnownRevision = response.body()?.revision ?: lastKnownRevision
+                response.body()!!.element.toNote()
+            } catch (e: IllegalStateException) {
+                if (e.message == "Data is out of sync") {
+                    fetchNotes()
+                    val retryResponse = api.updateNote(
+                        revision = lastKnownRevision,
+                        noteUid = note.uid,
+                        request = ElementRequest(note.toDto())
+                    ).also { checkResponse(it) }
+
+                    lastKnownRevision = retryResponse.body()?.revision ?: lastKnownRevision
+                    retryResponse.body()!!.element.toNote()
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
     suspend fun deleteNote(id: String): Boolean {
         return executeWithRetry(isModifyingOperation = true) {
-            val response = api.deleteNote(
-                revision = lastKnownRevision,
-                noteUid = id
-            ).also { checkResponse(it) }
+            try {
+                val response = api.deleteNote(
+                    revision = lastKnownRevision,
+                    noteUid = id
+                ).also { checkResponse(it) }
 
-            lastKnownRevision = response.body()?.revision ?: lastKnownRevision
-            true
+                lastKnownRevision = response.body()?.revision ?: lastKnownRevision
+                true
+            } catch (e: IllegalStateException) {
+                if (e.message == "Data is out of sync") {
+                    fetchNotes()
+                    val retryResponse = api.deleteNote(
+                        revision = lastKnownRevision,
+                        noteUid = id
+                    ).also { checkResponse(it) }
+
+                    lastKnownRevision = retryResponse.body()?.revision ?: lastKnownRevision
+                    true
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
     suspend fun patchNotes(notes: List<Note>): List<Note> {
         return executeWithRetry(isModifyingOperation = true) {
-            val response = api.patchNotes(
-                revision = lastKnownRevision,
-                request = PatchListRequest(notes.map { it.toDto() })
-            )
-            lastKnownRevision = response.revision
-            response.list.map { it.toNote() }
+            try {
+                val response = api.patchNotes(
+                    revision = lastKnownRevision,
+                    request = PatchListRequest(notes.map { it.toDto() })
+                )
+                lastKnownRevision = response.revision
+                response.list.map { it.toNote() }
+            } catch (e: IllegalStateException) {
+                if (e.message == "Data is out of sync") {
+                    fetchNotes()
+                    val retryResponse = api.patchNotes(
+                        revision = lastKnownRevision,
+                        request = PatchListRequest(notes.map { it.toDto() })
+                    )
+                    lastKnownRevision = retryResponse.revision
+                    retryResponse.list.map { it.toNote() }
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
     private fun checkResponse(response: retrofit2.Response<*>) {
         if (!response.isSuccessful) {
             val errorBody = response.errorBody()?.string()
-            throw HttpException(response).also {
-                if (errorBody?.contains("unsynchronized data") == true) {
-                    throw IllegalStateException("Data is out of sync")
+            throw when {
+                errorBody?.contains("unsynchronized data") == true -> {
+                    IllegalStateException("Data is out of sync")
                 }
+                else -> HttpException(response)
             }
         }
     }
@@ -113,9 +177,6 @@ class RemoteNoteDataSource @Inject constructor(
             } catch (e: Exception) {
                 lastException = e
                 if (shouldRetry(e, isModifyingOperation)) {
-                    if (e is IllegalStateException && e.message == "Data is out of sync") {
-                        fetchNotes()
-                    }
                     delay(RETRY_DELAY_MS * (attempt + 1))
                     attempt++
                 } else {

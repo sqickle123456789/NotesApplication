@@ -3,9 +3,12 @@ package com.sqickle.spacenotes.data.repository
 import com.sqickle.spacenotes.data.model.Note
 import com.sqickle.spacenotes.data.source.local.LocalNoteDataSource
 import com.sqickle.spacenotes.data.source.remote.RemoteNoteDataSource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -17,6 +20,22 @@ class NotesRepositoryImpl @Inject constructor(
     private val remoteDataSource: RemoteNoteDataSource
 ) : NotesRepository {
     private val syncMutex = Mutex()
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    init {
+        initializeRepository()
+    }
+
+    private fun initializeRepository() {
+        repositoryScope.launch {
+            try {
+                remoteDataSource.init()
+                syncWithBackend()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     override fun getAllNotesStream(): Flow<List<Note>> =
         localDataSource.getAllNotesStream().flowOn(Dispatchers.IO)
@@ -42,7 +61,7 @@ class NotesRepositoryImpl @Inject constructor(
         }
 
     override suspend fun pushNoteToBackend(note: Note): Result<Unit> =
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO + SupervisorJob()) {
             try {
                 syncMutex.withLock {
                     try {
@@ -75,7 +94,7 @@ class NotesRepositoryImpl @Inject constructor(
         }
 
     override suspend fun syncWithBackend() {
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO + SupervisorJob()) {
             try {
                 val remoteNotes = remoteDataSource.fetchNotes()
                 localDataSource.saveAllNotes(remoteNotes)
