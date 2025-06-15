@@ -12,9 +12,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import javax.inject.Inject
+import javax.inject.Named
 
 class NotesRepositoryImpl @Inject constructor(
-    private val localDataSource: LocalNoteDataSource,
+    @Named("room") private val localDataSource: LocalNoteDataSource,
     private val remoteDataSource: RemoteNoteDataSource
 ) : NotesRepository {
     private val syncMutex = Mutex()
