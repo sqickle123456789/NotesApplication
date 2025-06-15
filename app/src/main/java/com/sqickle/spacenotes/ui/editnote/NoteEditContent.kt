@@ -40,7 +40,7 @@ fun NoteEditContent(
     onImportanceChange: (Importance) -> Unit,
     onSelfDestructDateChange: (Date?) -> Unit,
     onSave: () -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
 

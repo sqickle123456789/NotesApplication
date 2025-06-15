@@ -4,15 +4,20 @@ import com.sqickle.spacenotes.data.model.Note
 import com.sqickle.spacenotes.data.source.local.LocalNoteDataSource
 import com.sqickle.spacenotes.data.source.remote.RemoteNoteDataSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import javax.inject.Inject
 
 class NotesRepositoryImpl @Inject constructor(
     private val localDataSource: LocalNoteDataSource,
     private val remoteDataSource: RemoteNoteDataSource
 ) : NotesRepository {
+    private val syncMutex = Mutex()
 
     override fun getAllNotesStream(): Flow<List<Note>> =
         localDataSource.getAllNotesStream().flowOn(Dispatchers.IO)
@@ -38,10 +43,22 @@ class NotesRepositoryImpl @Inject constructor(
         }
 
     override suspend fun pushNoteToBackend(note: Note): Result<Unit> =
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO + SupervisorJob()) {
             try {
-                remoteDataSource.pushNote(note)
-                Result.success(Unit)
+                syncMutex.withLock {
+                    syncWithBackend()
+                    try {
+                        remoteDataSource.pushNote(note)
+                        Result.success(Unit)
+                    } catch (e: Exception) {
+                        if (e is HttpException && e.code() == 400) {
+                            remoteDataSource.updateNote(note)
+                            Result.success(Unit)
+                        } else {
+                            throw e
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 Result.failure(e)
             }
@@ -50,8 +67,11 @@ class NotesRepositoryImpl @Inject constructor(
     override suspend fun deleteNoteFromBackend(id: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             try {
-                remoteDataSource.deleteNote(id)
-                Result.success(Unit)
+                syncMutex.withLock {
+                    syncWithBackend()
+                    remoteDataSource.deleteNote(id)
+                    Result.success(Unit)
+                }
             } catch (e: Exception) {
                 Result.failure(e)
             }
@@ -60,18 +80,20 @@ class NotesRepositoryImpl @Inject constructor(
     override suspend fun syncWithBackend() {
         withContext(Dispatchers.IO) {
             try {
-                val notes = remoteDataSource.fetchNotes()
-                localDataSource.saveAllNotes(notes)
+                val remoteNotes = remoteDataSource.fetchNotes()
+                localDataSource.saveAllNotes(remoteNotes)
             } catch (e: Exception) {
+                // Логируем ошибку, но не прерываем выполнение
+                e.printStackTrace()
             }
         }
     }
 
     override suspend fun getNote(id: String, forceRefresh: Boolean): Note? {
-        return if (forceRefresh) {
-            fetchNotesFromBackend()
-            localDataSource.getNoteById(id)
-        } else {
+        return withContext(Dispatchers.IO) {
+            if (forceRefresh) {
+                fetchNotesFromBackend()
+            }
             localDataSource.getNoteById(id) ?: run {
                 fetchNotesFromBackend()
                 localDataSource.getNoteById(id)
@@ -80,14 +102,11 @@ class NotesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAllNotes(forceRefresh: Boolean): List<Note> {
-        return if (forceRefresh) {
-            fetchNotesFromBackend()
-            localDataSource.getAllNotes()
-        } else {
-            localDataSource.getAllNotes().ifEmpty {
+        return withContext(Dispatchers.IO) {
+            if (forceRefresh || localDataSource.getAllNotes().isEmpty()) {
                 fetchNotesFromBackend()
-                localDataSource.getAllNotes()
             }
+            localDataSource.getAllNotes()
         }
     }
 }

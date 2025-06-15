@@ -8,6 +8,8 @@ import com.sqickle.spacenotes.data.model.Importance
 import com.sqickle.spacenotes.data.model.Note
 import com.sqickle.spacenotes.data.repository.NotesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -21,10 +23,14 @@ class CreateNoteViewModel @Inject constructor(
             title = "",
             content = "",
             color = Color.WHITE,
-            importance = Importance.NORMAL
+            importance = Importance.NORMAL,
+            createdAt = Date()
         )
     )
     val note = _note
+
+    private val _uiEvents = MutableSharedFlow<UiEvent>()
+    val uiEvents = _uiEvents.asSharedFlow()
 
     fun updateTitle(title: String) {
         _note.value = _note.value.copy(title = title)
@@ -46,10 +52,25 @@ class CreateNoteViewModel @Inject constructor(
         _note.value = _note.value.copy(selfDestructDate = date)
     }
 
-    fun saveNote(onSuccess: () -> Unit) {
+    fun saveNote() {
         viewModelScope.launch {
-            repository.saveNoteToCache(_note.value)
-            onSuccess()
+            try {
+                repository.saveNoteToCache(_note.value)
+                repository.pushNoteToBackend(_note.value).onSuccess {
+                    _uiEvents.emit(UiEvent.NoteSaved)
+                }.onFailure { error ->
+                    _uiEvents.emit(UiEvent.Error("Failed to sync note: ${error.message}"))
+                }
+
+                repository.syncWithBackend()
+            } catch (e: Exception) {
+                _uiEvents.emit(UiEvent.Error("Failed to save note: ${e.message}"))
+            }
         }
+    }
+
+    sealed class UiEvent {
+        object NoteSaved : UiEvent()
+        data class Error(val message: String) : UiEvent()
     }
 }

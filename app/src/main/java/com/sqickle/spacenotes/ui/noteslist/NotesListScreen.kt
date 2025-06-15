@@ -24,9 +24,13 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -35,8 +39,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.sqickle.spacenotes.data.model.Note
+import com.sqickle.spacenotes.ui.noteslist.components.LoadingIndicator
 import com.sqickle.spacenotes.ui.noteslist.components.SwipeWrapper
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun NotesListScreen(
@@ -44,9 +49,25 @@ fun NotesListScreen(
     onCreateNote: () -> Unit,
     viewModel: NotesListViewModel = hiltViewModel(),
 ) {
-    val notes: List<Note> by viewModel.notes.collectAsState()
+    val notes by viewModel.notes.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val configuration = LocalConfiguration.current
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val uiEvents = viewModel.uiEvents
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        uiEvents.collectLatest { event ->
+            when (event) {
+                is NotesListViewModel.UiEvent.Error -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+
+                NotesListViewModel.UiEvent.NoteDeleted -> {
+                    snackbarHostState.showSnackbar("Note deleted")
+                }
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -54,9 +75,8 @@ fun NotesListScreen(
                 .fillMaxSize()
                 .background(Color(0xFF0B0D18))
         ) {
-            StarryBackground(configuration = configuration)
+            StarryBackground(configuration = LocalConfiguration.current)
         }
-
         Scaffold(
             floatingActionButton = {
                 SunFloatingActionButton(
@@ -64,19 +84,15 @@ fun NotesListScreen(
                     isRotating = true
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = Color.Transparent
         ) { padding ->
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+            when {
+                isLoading -> LoadingIndicator()
+                else -> LazyColumn(
+                    modifier = Modifier.padding(padding)
                 ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyColumn(modifier = Modifier.padding(padding)) {
                     items(notes) { note ->
-
                         SwipeWrapper(
                             onSwipeDelete = { viewModel.deleteNote(note.uid) },
                             content = {
@@ -89,6 +105,14 @@ fun NotesListScreen(
                         )
                     }
                 }
+            }
+
+            if (isRefreshing) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp)
+                )
             }
         }
     }

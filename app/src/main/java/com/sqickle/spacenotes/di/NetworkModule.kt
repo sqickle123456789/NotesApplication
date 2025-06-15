@@ -1,8 +1,9 @@
 package com.sqickle.spacenotes.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.sqickle.spacenotes.data.source.remote.ApiService
+import com.sqickle.spacenotes.data.source.remote.OAuthTokenProvider
 import com.sqickle.spacenotes.data.source.remote.RemoteNoteDataSource
-import com.sqickle.spacenotes.data.source.remote.api.ApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -70,6 +71,21 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRemoteNoteDataSource(apiService: ApiService): RemoteNoteDataSource =
-        RemoteNoteDataSource(apiService)
+    fun provideOAuthTokenProvider(): OAuthTokenProvider =
+        YandexOAuthTokenProvider()
+
+    @Provides
+    @Singleton
+    fun provideRemoteNoteDataSource(
+        apiService: ApiService,
+        oauthTokenProvider: OAuthTokenProvider,
+    ): RemoteNoteDataSource =
+        RemoteNoteDataSource(apiService, oauthTokenProvider)
+}
+
+@Singleton
+class YandexOAuthTokenProvider : OAuthTokenProvider {
+    override fun refreshToken(clientId: String): String {
+        return "sqickle_oauth_token"
+    }
 }
