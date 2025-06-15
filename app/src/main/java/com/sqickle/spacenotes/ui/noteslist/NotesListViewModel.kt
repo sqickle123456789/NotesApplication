@@ -51,19 +51,6 @@ class NotesListViewModel @Inject constructor(
         }
     }
 
-    fun refreshNotes() {
-        viewModelScope.launch {
-            _isRefreshing.value = true
-            try {
-                repository.syncWithBackend()
-            } catch (e: Exception) {
-                _uiEvents.emit(UiEvent.Error("Sync failed: ${e.message}"))
-            } finally {
-                _isRefreshing.value = false
-            }
-        }
-    }
-
     fun deleteNote(noteId: String) {
         viewModelScope.launch {
             _isLoading.value = true

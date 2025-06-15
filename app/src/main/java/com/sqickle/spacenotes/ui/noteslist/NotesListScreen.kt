@@ -164,7 +164,7 @@ private fun Star(modifier: Modifier = Modifier) {
 
 
 @Composable
-fun SunFloatingActionButton(
+private fun SunFloatingActionButton(
     onClick: () -> Unit,
     isRotating: Boolean = true,
 ) {

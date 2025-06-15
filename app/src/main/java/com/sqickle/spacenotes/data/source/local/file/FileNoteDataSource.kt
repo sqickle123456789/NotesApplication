@@ -3,7 +3,7 @@ package com.sqickle.spacenotes.data.source.local.file
 import android.content.Context
 import android.util.Log
 import com.sqickle.spacenotes.data.model.Note
-import com.sqickle.spacenotes.data.model.json
+import com.sqickle.spacenotes.data.model.Note.Companion.json
 import com.sqickle.spacenotes.data.source.local.LocalNoteDataSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ import javax.inject.Singleton
 
 @Singleton
 class FileNoteDataSource @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : LocalNoteDataSource {
 
     private companion object {
@@ -140,7 +140,7 @@ class FileNoteDataSource @Inject constructor(
 
     private suspend fun <T> retryOperation(
         maxRetries: Int,
-        operation: suspend () -> T
+        operation: suspend () -> T,
     ): T? {
         var lastException: Exception? = null
         repeat(maxRetries) { attempt ->
