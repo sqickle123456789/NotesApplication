@@ -23,12 +23,6 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideRemoteDataSource(): RemoteNoteDataSource {
-        return RemoteNoteDataSource()
-    }
-
-    @Provides
-    @Singleton
     fun provideNotesRepository(
         localDataSource: LocalNoteDataSource,
         remoteDataSource: RemoteNoteDataSource
